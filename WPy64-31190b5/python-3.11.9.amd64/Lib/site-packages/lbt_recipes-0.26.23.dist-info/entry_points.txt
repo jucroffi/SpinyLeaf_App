@@ -1,0 +1,2 @@
+[console_scripts]
+lbt-recipes = lbt_recipes.cli:main

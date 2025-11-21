@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: streamlit-vtkjs
+Version: 0.3.2
+Summary: vtkjs component for streamlit
+Home-page: https://github.com/pollination/streamlit-vtkjs
+Author: Pollination
+Author-email: nicolas@ladybug.tools
+License: UNKNOWN
+Platform: UNKNOWN
+Requires-Python: >=3.7
+Description-Content-Type: text/plain
+License-File: LICENSE
+Requires-Dist: streamlit (>=1.5.1)
+
+vtkjs component for streamlit
+

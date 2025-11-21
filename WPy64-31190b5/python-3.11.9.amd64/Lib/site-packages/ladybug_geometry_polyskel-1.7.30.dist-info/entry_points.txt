@@ -1,0 +1,2 @@
+[console_scripts]
+ladybug-geometry-polyskel = ladybug_geometry_polyskel.cli:main

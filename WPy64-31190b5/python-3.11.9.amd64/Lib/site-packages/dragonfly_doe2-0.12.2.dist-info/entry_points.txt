@@ -1,0 +1,2 @@
+[console_scripts]
+dragonfly-doe2 = dragonfly_doe2.cli:doe2

@@ -1,0 +1,82 @@
+Metadata-Version: 2.1
+Name: dragonfly-display
+Version: 0.3.6
+Summary: Adds methods to translate dragonfly objects to VisualizationSets.
+Home-page: https://github.com/ladybug-tools/dragonfly-display
+Author: Ladybug Tools
+Author-email: info@ladybug.tools
+License: AGPL-3.0
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: License :: OSI Approved :: GNU Affero General Public License v3
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: honeybee-display>=0.5.3
+Requires-Dist: dragonfly-core>=1.59.1
+Provides-Extra: full
+Requires-Dist: dragonfly-energy>=1.25.28; extra == "full"
+Requires-Dist: dragonfly-radiance>=0.3.20; extra == "full"
+Requires-Dist: ladybug-vtk>=0.15.2; extra == "full"
+
+[![Build Status](https://github.com/ladybug-tools/dragonfly-display/workflows/CI/badge.svg)](https://github.com/ladybug-tools/dragonfly-display/actions)
+
+[![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-370/) [![Python 2.7](https://img.shields.io/badge/python-2.7-green.svg)](https://www.python.org/downloads/release/python-270/) [![IronPython](https://img.shields.io/badge/ironpython-2.7-red.svg)](https://github.com/IronLanguages/ironpython2/releases/tag/ipy-2.7.8/)
+
+# dragonfly-display
+
+Adds methods and a CLI to translate dragonfly objects to VisualizationSets.
+
+## Installation
+
+```console
+pip install -U dragonfly-display
+```
+
+If you want to also include all dependencies needed to produce VTK visualizations
+from dragonfly Models use.
+
+```console
+pip install -U dragonfly-display[full]
+```
+
+To check if the command line interface is installed correctly use `dragonfly-display --help`
+
+## QuickStart
+
+```python
+import dragonfly_display
+
+```
+
+## [API Documentation](http://ladybug-tools.github.io/dragonfly-display/docs)
+
+## Local Development
+
+1. Clone this repo locally
+```console
+git clone git@github.com:ladybug-tools/dragonfly-display
+
+# or
+
+git clone https://github.com/ladybug-tools/dragonfly-display
+```
+2. Install dependencies:
+```console
+cd dragonfly-display
+pip install -r dev-requirements.txt
+pip install -r requirements.txt
+```
+
+3. Run Tests:
+```console
+python -m pytest tests/
+```
+
+4. Generate Documentation:
+```console
+sphinx-apidoc -f -e -d 4 -o ./docs ./dragonfly_display
+sphinx-build -b html ./docs ./docs/_build/docs
+```

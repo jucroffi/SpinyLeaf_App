@@ -1,0 +1,18 @@
+ZoneAirContaminantBalance,
+Yes, !- Carbon Dioxide Concentration
+Carbon_dioxideSchedule, !- Outdoor Carbon Dioxide Schedule Name
+No, !- Generic Contaminant Concentration
+Carbon_dioxideSchedule; !- Outdoor Generic Contaminant Schedule Name
+
+Schedule:Compact,
+Carbon_dioxideSchedule, !- Name
+ANY NUMBER, !- Schedule Type Limits Name
+Through: 12/31, !- Field 1
+For: AllDays, !- Field 2
+Until: 24:00, !- Field 3
+400; !- Field 4
+
+Output:Variable,
+*, !- Key Value
+Zone Air CO2 Concentration , !- Variable Name
+Hourly; !- Reporting Frequency

@@ -1,0 +1,3 @@
+[console_scripts]
+honeybee-vtk = honeybee_vtk.cli:vtk
+

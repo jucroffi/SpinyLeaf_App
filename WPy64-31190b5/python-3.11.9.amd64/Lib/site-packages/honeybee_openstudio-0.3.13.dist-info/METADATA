@@ -1,0 +1,64 @@
+Metadata-Version: 2.1
+Name: honeybee-openstudio
+Version: 0.3.13
+Summary: Honeybee extension for translating HBJSON models to OpenStudio (for OSM, IDF and gbXML).
+Home-page: https://github.com/ladybug-tools/honeybee-openstudio
+Author: Ladybug Tools
+Author-email: info@ladybug.tools
+License: AGPL-3.0
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: License :: OSI Approved :: GNU Affero General Public License v3
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: honeybee-energy>=1.112.4
+Requires-Dist: openstudio==3.9.0
+Provides-Extra: standards
+Requires-Dist: honeybee-energy-standards==2.3.0; extra == "standards"
+
+# honeybee-openstudio
+
+Honeybee extension for translation to/from OpenStudio.
+
+Specifically, this package extends [honeybee-core](https://github.com/ladybug-tools/honeybee-core) and [honeybee-energy](https://github.com/ladybug-tools/honeybee-energy) to perform translations to/from OpenStudio using the [OpenStudio](https://github.com/NREL/OpenStudio) SDK.
+
+## Installation
+
+`pip install -U honeybe-openstudio`
+
+## QuickStart
+
+```console
+import honeybee_openstudio
+```
+
+## [API Documentation](http://ladybug-tools.github.io/honeybee-openstudio/docs)
+
+## Local Development
+
+1. Clone this repo locally
+```console
+git clone git@github.com:ladybug-tools/honeybee-openstudio
+
+# or
+
+git clone https://github.com/ladybug-tools/honeybee-openstudio
+```
+2. Install dependencies:
+```
+cd honeybee-openstudio
+pip install -r dev-requirements.txt
+pip install -r requirements.txt
+```
+
+3. Run Tests:
+```console
+python -m pytest tests/
+```
+
+4. Generate Documentation:
+```console
+sphinx-apidoc -f -e -d 4 -o ./docs ./honeybee_openstudio
+sphinx-build -b html ./docs ./docs/_build/docs
+```

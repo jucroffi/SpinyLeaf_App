@@ -1,0 +1,2 @@
+[queenbee.plugins]
+local = queenbee_local.cli:local

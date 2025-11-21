@@ -1,0 +1,3 @@
+[console_scripts]
+queenbee=queenbee.cli:main
+

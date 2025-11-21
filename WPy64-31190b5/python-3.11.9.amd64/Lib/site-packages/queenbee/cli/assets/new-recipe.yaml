@@ -1,0 +1,35 @@
+metadata:
+  tag: 0.1.0
+dependencies:
+- type: Dependency
+  kind: plugin
+  name: whalesay
+  tag: 0.1.0
+  source: https://pollination.github.io/shed # Replace with name of repo
+flow:
+- name: main
+  inputs:
+    - name: thing-to-say
+      type: DAGStringInput
+      default: hi
+      description: What the whale will say
+  tasks:
+  - name: say-something
+    template: whalesay/say-hi
+    arguments:
+      - name: message
+        type: TaskArgument
+        from:
+          type: InputReference
+          variable: thing-to-say
+    returns:
+      - name: whale-said
+        type: TaskReturn
+
+  outputs:
+    - name: what-the-whale-said
+      type: DAGStringOutput
+      from:
+        type: TaskReference
+        name: say-something
+        variable: whale-said

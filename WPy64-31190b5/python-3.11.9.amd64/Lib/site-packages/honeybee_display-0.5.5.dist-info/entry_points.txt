@@ -1,0 +1,2 @@
+[console_scripts]
+honeybee-display = honeybee_display.cli:display

@@ -1,0 +1,82 @@
+Metadata-Version: 2.1
+Name: honeybee-display
+Version: 0.5.5
+Summary: Adds methods to translate honeybee objects to VisualizationSets.
+Home-page: https://github.com/ladybug-tools/honeybee-display
+Author: Ladybug Tools
+Author-email: info@ladybug.tools
+License: AGPL-3.0
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: License :: OSI Approved :: GNU Affero General Public License v3
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: ladybug-display>=0.11.2
+Requires-Dist: honeybee-core>=1.58.63
+Provides-Extra: full
+Requires-Dist: honeybee-energy>=1.95.35; extra == "full"
+Requires-Dist: honeybee-radiance>=1.66.147; extra == "full"
+Requires-Dist: ladybug-vtk>=0.15.2; extra == "full"
+
+[![Build Status](https://github.com/ladybug-tools/honeybee-display/workflows/CI/badge.svg)](https://github.com/ladybug-tools/honeybee-display/actions)
+
+[![Python 3.10](https://img.shields.io/badge/python-3.10-orange.svg)](https://www.python.org/downloads/release/python-3100/) [![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-370/) [![Python 2.7](https://img.shields.io/badge/python-2.7-green.svg)](https://www.python.org/downloads/release/python-270/) [![IronPython](https://img.shields.io/badge/ironpython-2.7-red.svg)](https://github.com/IronLanguages/ironpython2/releases/tag/ipy-2.7.8/)
+
+# honeybee-display
+
+Adds methods and a CLI to translate honeybee objects to VisualizationSets.
+
+## Installation
+
+```console
+pip install -U honeybee-display
+```
+
+If you want to also include all dependencies needed to produce VTK visualizations
+from honeybee Models use.
+
+```console
+pip install -U honeybee-display[full]
+```
+
+To check if the command line interface is installed correctly use `honeybee-display --help`
+
+## QuickStart
+
+```python
+import honeybee_display
+
+```
+
+## [API Documentation](http://ladybug-tools.github.io/honeybee-display/docs)
+
+## Local Development
+
+1. Clone this repo locally
+```console
+git clone git@github.com:ladybug-tools/honeybee-display
+
+# or
+
+git clone https://github.com/ladybug-tools/honeybee-display
+```
+2. Install dependencies:
+```console
+cd honeybee-display
+pip install -r dev-requirements.txt
+pip install -r requirements.txt
+```
+
+3. Run Tests:
+```console
+python -m pytest tests/
+```
+
+4. Generate Documentation:
+```console
+sphinx-apidoc -f -e -d 4 -o ./docs ./honeybee_display
+sphinx-build -b html ./docs ./docs/_build/docs
+```

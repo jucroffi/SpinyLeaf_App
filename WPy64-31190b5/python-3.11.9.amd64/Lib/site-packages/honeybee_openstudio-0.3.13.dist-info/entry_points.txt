@@ -1,0 +1,2 @@
+[console_scripts]
+honeybee-openstudio = honeybee_openstudio.cli:openstudio

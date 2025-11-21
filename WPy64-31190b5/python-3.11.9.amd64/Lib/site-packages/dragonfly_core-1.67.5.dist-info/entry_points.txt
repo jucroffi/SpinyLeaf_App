@@ -1,0 +1,2 @@
+[console_scripts]
+dragonfly = dragonfly.cli:main

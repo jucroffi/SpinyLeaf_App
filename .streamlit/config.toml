@@ -1,0 +1,7 @@
+[theme]
+base="light"
+primaryColor="#2d694bff"
+secondaryBackgroundColor="#e6e6e6"
+font = "verdana" 
+[client]
+toolbarMode = "viewer"

@@ -1,0 +1,2 @@
+[console_scripts]
+honeybee-folder = honeybee_radiance_folder.cli:folder

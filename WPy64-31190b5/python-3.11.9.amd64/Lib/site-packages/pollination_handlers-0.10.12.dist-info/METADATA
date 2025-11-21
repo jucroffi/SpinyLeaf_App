@@ -1,0 +1,26 @@
+Metadata-Version: 2.1
+Name: pollination-handlers
+Version: 0.10.12
+Summary: Handlers to process Pollination recipes inputs and outputs.
+Home-page: https://github.com/pollination/handlers-python
+Author: Pollination
+Author-email: info@ladybug.tools
+License: AGPL-3.0
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: License :: OSI Approved :: GNU Affero General Public License v3
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: lbt-dragonfly (>=0.11.682)
+
+# handlers-python
+Handlers to process inputs and outputs of Pollination recipes.
+
+An input handler takes an input provided by user and convert it to the object that is
+needed by the recipe input.
+
+An output handler takes the output of a recipe and post-process it before visualizing it
+inside the user interface.
