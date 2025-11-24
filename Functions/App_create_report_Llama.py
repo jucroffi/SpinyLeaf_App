@@ -114,7 +114,7 @@ soc_im_path = out_f / 'Social_Dimension'
 
 # %%
 llm = Llama(
-    model_path= "./LLM_Model/Meta-Llama-3-8B-Instruct.Q4_K_M.gguf",
+    model_path= "C:/SpinyLeaf/LLM_Model/Meta-Llama-3-8B-Instruct.Q4_K_M.gguf",
     n_ctx=8192,
     verbose=False
 )
