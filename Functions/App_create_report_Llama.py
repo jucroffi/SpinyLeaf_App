@@ -15,86 +15,27 @@ import re
 
 from pathlib import Path
 import re
+import argparse
+import sys
 
 
-MASTER_BIB = {
+def parse_args():
+    p = argparse.ArgumentParser()
+    p.add_argument("--model-path", required=True, help="Path to a llama.cpp compatible .gguf model")
+    p.add_argument("--n-ctx", type=int, default=8192)
+    return p.parse_args()
 
-    ("barrie", "2023"): "Barrie, H., McDougall, K., Miller, K., & Faulkner, D. (2023). The social value of public spaces in mixed-use high-rise buildings. *Buildings and Cities, 4*(1), 669–689. https://doi.org/10.5334/bc.339",
-    ("bee", "2016"): "Bee, C., & Im, J. (2016). Neighborhood design and community building. *Journal of Urban Design, 21*(1), 1–29. https://doi.org/10.1080/13574809.2015.1106920",
-    ("aw", "2016"): "Aw, S. B., & Lim, P. I. (2016). The provision of vertical social pockets for better social interaction in high-rise living. *Planning Malaysia: Journal of the Malaysian Institute of Planners, Special Issue IV*, 163–180.",
-    ("jordan", "2023"): "Jordan, H. (2023). The impact of social connections on health and wellbeing. *Health & Social Care in the Community, 31*(1), 85–95. https://doi.org/10.1111/hsc.13889",
-    ("kearns", "2012"): "Kearns, A., Whitley, E., Tannahill, C., & Ellaway, A. (2012). Loneliness, social relations and health and well-being in deprived communities. *Psychology, Health & Medicine, 17*(3), 374–385. https://doi.org/10.1080/13548506.2011.608805",
-    ("umberson", "2010"): "Umberson, D., & Montez, J. K. (2010). Social relationships and health: A flashpoint for health policy. *Journal of Health and Social Behavior, 51*(Suppl), S54–S66. https://doi.org/10.1177/0022146510383501",
-    ("weijs-perree", "2015"): "Weijs-Perrée, M., van den Berg, P., Arentze, T., & Kemperman, A. (2015). Factors influencing social satisfaction and loneliness: A path analysis. *Journal of Transport & Health, 2*(4), 451–462. https://doi.org/10.1016/j.jth.2015.07.002",
-    ("williams", "2005"): "Williams, K. (2005). Spatial planning, urban form and sustainable transport: An evidence-based approach. *Urban Studies, 42*(7), 1145–1166. https://doi.org/10.1080/00420980500143646",
-    ("williams-cohousing", "2005"): "Williams, J. (2005). Designing neighbourhoods for social interaction: The case of cohousing. *Journal of Urban Design, 10*(2), 195–227. https://doi.org/10.1080/13574800500086998",
-    ("barros", "2019"): "Barros, P., Ng Fat, L., Garcia, L. M. T., Slovic, A. D., Thomopoulos, N., de Sá, T. H., Morais, P., et al. (2019). Social consequences and mental health outcomes of living in high-rise residential buildings: A systematic review. *Cities, 93*, 263–272. https://doi.org/10.1016/j.cities.2019.05.015",
-    ("kleeman", "2023"): "Kleeman, A., Giles-Corti, B., Gunn, L., Hooper, P., & Foster, S. (2023). The impact of the design and quality of communal areas in apartment buildings on residents’ neighbouring and loneliness. *Cities, 133*, 104126. https://doi.org/10.1016/j.cities.2022.104126",
-    ("leavell", "2019"): "Leavell, M. A., Leiferman, J. A., Gascon, M., Braddick, F., Gonzalez, J. C., & Litt, J. S. (2019). Nature-based social prescribing in urban settings to improve social connectedness and mental well-being: A review. *Current Environmental Health Reports, 6*(4), 297–308. https://doi.org/10.1007/s40572-019-00251-7",
-    ("nguyen", "2024"): "Nguyen, L. P., Van Den Berg, P. E., Kemperman, A. D., & Mohammadi, M. (2024). Social impacts of living in high-rise apartment buildings: The effects of buildings and neighborhoods. *Journal of Urban Affairs*, 1–22. https://doi.org/10.1080/07352166.2024.2311165",
-    ("nguyen", "2025"): "Nguyen, L., Van Den Berg, P., Kemperman, A., & Mohammadi, M. (2025). How does the layout of indoor communal spaces in low-income high-rise apartment buildings impact the social interactions between residents? *Cities & Health*, 1–24. https://doi.org/10.1080/23748834.2025.2509739",
+def validate_model_path(model_path: str) -> Path:
+    mp = Path(model_path)
+    if not mp.exists():
+        raise FileNotFoundError(f"Model file not found: {mp}")
+    if mp.suffix.lower() != ".gguf":
+        raise ValueError(f"Model must be a .gguf file. Got: {mp.suffix}")
+    if mp.stat().st_size < 10_000_000:
+        raise ValueError(f"Model file looks too small/corrupt: {mp} ({mp.stat().st_size} bytes)")
+    return mp
 
-    
-    ("altomonte", "2020"): "Altomonte, S., Allen, J., Bluyssen, P. M., Brager, G., Heschong, L., Loder, A., Schiavon, S., et al. (2020). Ten questions concerning well-being in the built environment. *Building and Environment, 180*, 106949. https://doi.org/10.1016/j.buildenv.2020.106949",
-    ("aries", "2015"): "Aries, M. B. C., Aarts, M. P. J., & van Hoof, J. (2015). Daylight and health: A review of the evidence and consequences for the built environment. *Lighting Research & Technology, 47*(1), 6–27. https://doi.org/10.1177/1477153513509258",
-    ("capaldi", "2014"): "Capaldi, C. A., Dopko, R. L., & Zelenski, J. M. (2014). The relationship between nature connectedness and happiness: A meta-analysis. *Frontiers in Psychology, 5*, 976. https://doi.org/10.3389/fpsyg.2014.00976",
-    ("carmona", "2010"): "Carmona, M., Gallent, N., & Sarkar, R. (2010). *Space standards: The benefits*. University College London for CABE.",
-    ("duarte", "2023"): "Duarte, C. C., Cortiços, N. D., Stefańska, A., & Stefańska, A. (2023). Home balconies during the COVID-19 pandemic: Future architect’s preferences in Lisbon and Warsaw. *Applied Sciences, 13*(1), 298. https://doi.org/10.3390/app13010298",
-    ("giang", "2024"): "Giang Thi Ngoc, N., Tsaih, L. S.-J., Chen, J. C.-P., Tamariska, S. R., Coelho, A. M. F., & Kung, H.-Y. (2024). Balcony usage as a space to achieve human well-being during pandemic COVID-19. *Journal of Asian Architecture and Building Engineering*, 1–13. https://doi.org/10.1080/13467581.2024.2370408",
-    ("howell", "2013"): "Howell, A. J., & Passmore, H.-A. (2013). The nature of happiness: Nature affiliation and mental well-being. In C. L. M. Keyes (Ed.), *Mental Well-Being* (pp. 231–257). Springer. https://doi.org/10.1007/978-94-007-5195-8_11",
-    ("kim", "2021"): "Kim, S., Park, H., & Choo, S. (2021). Effects of changes to architectural elements on human relaxation-arousal responses: Based on VR and EEG. *International Journal of Environmental Research and Public Health, 18*(8), 4305. https://doi.org/10.3390/ijerph18084305",
-    ("ko", "2022"): "Ko, W. H., Kent, M. G., Schiavon, S., Levitt, B., & Betti, G. (2022). A window view quality assessment framework. *LEUKOS, 18*(3), 268–293. https://doi.org/10.1080/15502724.2021.1965889",
-    ("smektala", "2022"): "Smektała, M., & Baborska-Narożny, M. (2022). The use of apartment balconies: Context, design and social norms. *Buildings and Cities, 3*(1), 134–152. https://doi.org/10.5334/bc.193",
-    ("song", "2024"): "Song, T., Xu, L., Zhao, F., & Du, Y. (2024). Healing properties of residential balcony: Characteristics of balcony space in Shanghai’s collective housing. *Journal of Building Engineering, 87*, 108992. https://doi.org/10.1016/j.jobe.2024.108992",
-    ("yeom", "2020"): "Yeom, S., Kim, H., Hong, T., Park, H. S., & Lee, D.-E. (2020). An integrated psychological score for occupants according to the windows’ outdoor view size. *Building and Environment, 180*, 107019. https://doi.org/10.1016/j.buildenv.2020.107019",
 
-    
-    ("wolkoff", "2018"): "Wolkoff, P. (2018). Indoor air humidity, air quality, and health—An overview. *International Journal of Hygiene and Environmental Health, 221*(3), 376–390. https://doi.org/10.1016/j.ijheh.2018.01.015",
-    ("tsai", "2012"): "Tsai, D. H., Lin, J. S., & Chan, C. C. (2012). Office workers’ sick building syndrome and indoor carbon dioxide concentrations. *Journal of Occupational and Environmental Hygiene, 9*(5), 345–351. https://doi.org/10.1080/15459624.2012.673454",
-}
-
-def _norm_key_from_citation(cite_text: str):
-    
-    import re, unicodedata
-    m = re.search(r"([A-Za-zÀ-ÖØ-öø-ÿ'\-]+).*?(\d{4})", cite_text)
-    if not m:
-        return None
-    last = m.group(1)
-    year = m.group(2)
-    
-    last = ''.join(c for c in unicodedata.normalize('NFKD', last) if not unicodedata.combining(c)).lower()
-    
-    if last == "williams" and "cohousing" in cite_text.lower():
-        return ("williams-cohousing", year)
-    
-    last = last.replace("weijs-perrée", "weijs-perree").replace("smektała", "smektala")
-    return (last, year)
-
-def extract_citation_keys(text: str):
-    
-    import re
-    keys = set()
-    
-    for group in re.findall(r"\(([^)]+)\)", text):
-        
-        for part in re.split(r";|∙|·", group):
-            key = _norm_key_from_citation(part)
-            if key:
-                keys.add(key)
-    return keys
-
-def format_references_from_keys(keys, extras=None):
-    
-    lines = []
-    for k in sorted(keys, key=lambda x: (x[0], x[1])):
-        if k in MASTER_BIB:
-            lines.append(MASTER_BIB[k])
-    if extras:
-        for s in extras:
-            s = s.strip()
-            if s and s not in lines:
-                lines.append(s)
-    return lines
 
 
 # %%
@@ -113,9 +54,12 @@ del_im_path = out_f / 'Delight_Dimension'
 soc_im_path = out_f / 'Social_Dimension'
 
 # %%
+args = parse_args()
+model_file = validate_model_path(args.model_path)
+
 llm = Llama(
-    model_path= "C:/SpinyLeaf/LLM_Model/Meta-Llama-3-8B-Instruct.Q4_K_M.gguf",
-    n_ctx=8192,
+    model_path=str(model_file),
+    n_ctx=args.n_ctx,
     verbose=False
 )
 
@@ -163,6 +107,49 @@ def df_to_dict(path, cols=None, filter_col=None, filter_val=None, exclude_prefix
         df = df[~df["room_ids"].str.contains(pattern, regex=True)]
 
     return df.to_dict(orient="records")
+
+def _norm_key_from_citation(cite_text: str):
+    
+    import re, unicodedata
+    m = re.search(r"([A-Za-zÀ-ÖØ-öø-ÿ'\-]+).*?(\d{4})", cite_text)
+    if not m:
+        return None
+    last = m.group(1)
+    year = m.group(2)
+    
+    last = ''.join(c for c in unicodedata.normalize('NFKD', last) if not unicodedata.combining(c)).lower()
+    
+    if last == "williams" and "cohousing" in cite_text.lower():
+        return ("williams-cohousing", year)
+    
+    last = last.replace("weijs-perrée", "weijs-perree").replace("smektała", "smektala")
+    return (last, year)
+
+def extract_citation_keys(text: str):
+    
+    import re
+    keys = set()
+    
+    for group in re.findall(r"\(([^)]+)\)", text):
+        
+        for part in re.split(r";|∙|·", group):
+            key = _norm_key_from_citation(part)
+            if key:
+                keys.add(key)
+    return keys
+
+def format_references_from_keys(keys, extras=None):
+    
+    lines = []
+    for k in sorted(keys, key=lambda x: (x[0], x[1])):
+        if k in MASTER_BIB:
+            lines.append(MASTER_BIB[k])
+    if extras:
+        for s in extras:
+            s = s.strip()
+            if s and s not in lines:
+                lines.append(s)
+    return lines
 
 # %%
 def extract_wellbeing_summary(path):
@@ -339,6 +326,44 @@ social_df = df_to_dict(
     cols=["room_ids", "floor_level", "social_amount_satisf", "social_distribution_satisf", "social_green_satisf", "social_satisfaction"],
     exclude_prefixes=exclude
 )
+
+
+MASTER_BIB = {
+
+    ("barrie", "2023"): "Barrie, H., McDougall, K., Miller, K., & Faulkner, D. (2023). The social value of public spaces in mixed-use high-rise buildings. *Buildings and Cities, 4*(1), 669–689. https://doi.org/10.5334/bc.339",
+    ("bee", "2016"): "Bee, C., & Im, J. (2016). Neighborhood design and community building. *Journal of Urban Design, 21*(1), 1–29. https://doi.org/10.1080/13574809.2015.1106920",
+    ("aw", "2016"): "Aw, S. B., & Lim, P. I. (2016). The provision of vertical social pockets for better social interaction in high-rise living. *Planning Malaysia: Journal of the Malaysian Institute of Planners, Special Issue IV*, 163–180.",
+    ("jordan", "2023"): "Jordan, H. (2023). The impact of social connections on health and wellbeing. *Health & Social Care in the Community, 31*(1), 85–95. https://doi.org/10.1111/hsc.13889",
+    ("kearns", "2012"): "Kearns, A., Whitley, E., Tannahill, C., & Ellaway, A. (2012). Loneliness, social relations and health and well-being in deprived communities. *Psychology, Health & Medicine, 17*(3), 374–385. https://doi.org/10.1080/13548506.2011.608805",
+    ("umberson", "2010"): "Umberson, D., & Montez, J. K. (2010). Social relationships and health: A flashpoint for health policy. *Journal of Health and Social Behavior, 51*(Suppl), S54–S66. https://doi.org/10.1177/0022146510383501",
+    ("weijs-perree", "2015"): "Weijs-Perrée, M., van den Berg, P., Arentze, T., & Kemperman, A. (2015). Factors influencing social satisfaction and loneliness: A path analysis. *Journal of Transport & Health, 2*(4), 451–462. https://doi.org/10.1016/j.jth.2015.07.002",
+    ("williams", "2005"): "Williams, K. (2005). Spatial planning, urban form and sustainable transport: An evidence-based approach. *Urban Studies, 42*(7), 1145–1166. https://doi.org/10.1080/00420980500143646",
+    ("williams-cohousing", "2005"): "Williams, J. (2005). Designing neighbourhoods for social interaction: The case of cohousing. *Journal of Urban Design, 10*(2), 195–227. https://doi.org/10.1080/13574800500086998",
+    ("barros", "2019"): "Barros, P., Ng Fat, L., Garcia, L. M. T., Slovic, A. D., Thomopoulos, N., de Sá, T. H., Morais, P., et al. (2019). Social consequences and mental health outcomes of living in high-rise residential buildings: A systematic review. *Cities, 93*, 263–272. https://doi.org/10.1016/j.cities.2019.05.015",
+    ("kleeman", "2023"): "Kleeman, A., Giles-Corti, B., Gunn, L., Hooper, P., & Foster, S. (2023). The impact of the design and quality of communal areas in apartment buildings on residents’ neighbouring and loneliness. *Cities, 133*, 104126. https://doi.org/10.1016/j.cities.2022.104126",
+    ("leavell", "2019"): "Leavell, M. A., Leiferman, J. A., Gascon, M., Braddick, F., Gonzalez, J. C., & Litt, J. S. (2019). Nature-based social prescribing in urban settings to improve social connectedness and mental well-being: A review. *Current Environmental Health Reports, 6*(4), 297–308. https://doi.org/10.1007/s40572-019-00251-7",
+    ("nguyen", "2024"): "Nguyen, L. P., Van Den Berg, P. E., Kemperman, A. D., & Mohammadi, M. (2024). Social impacts of living in high-rise apartment buildings: The effects of buildings and neighborhoods. *Journal of Urban Affairs*, 1–22. https://doi.org/10.1080/07352166.2024.2311165",
+    ("nguyen", "2025"): "Nguyen, L., Van Den Berg, P., Kemperman, A., & Mohammadi, M. (2025). How does the layout of indoor communal spaces in low-income high-rise apartment buildings impact the social interactions between residents? *Cities & Health*, 1–24. https://doi.org/10.1080/23748834.2025.2509739",
+
+    
+    ("altomonte", "2020"): "Altomonte, S., Allen, J., Bluyssen, P. M., Brager, G., Heschong, L., Loder, A., Schiavon, S., et al. (2020). Ten questions concerning well-being in the built environment. *Building and Environment, 180*, 106949. https://doi.org/10.1016/j.buildenv.2020.106949",
+    ("aries", "2015"): "Aries, M. B. C., Aarts, M. P. J., & van Hoof, J. (2015). Daylight and health: A review of the evidence and consequences for the built environment. *Lighting Research & Technology, 47*(1), 6–27. https://doi.org/10.1177/1477153513509258",
+    ("capaldi", "2014"): "Capaldi, C. A., Dopko, R. L., & Zelenski, J. M. (2014). The relationship between nature connectedness and happiness: A meta-analysis. *Frontiers in Psychology, 5*, 976. https://doi.org/10.3389/fpsyg.2014.00976",
+    ("carmona", "2010"): "Carmona, M., Gallent, N., & Sarkar, R. (2010). *Space standards: The benefits*. University College London for CABE.",
+    ("duarte", "2023"): "Duarte, C. C., Cortiços, N. D., Stefańska, A., & Stefańska, A. (2023). Home balconies during the COVID-19 pandemic: Future architect’s preferences in Lisbon and Warsaw. *Applied Sciences, 13*(1), 298. https://doi.org/10.3390/app13010298",
+    ("giang", "2024"): "Giang Thi Ngoc, N., Tsaih, L. S.-J., Chen, J. C.-P., Tamariska, S. R., Coelho, A. M. F., & Kung, H.-Y. (2024). Balcony usage as a space to achieve human well-being during pandemic COVID-19. *Journal of Asian Architecture and Building Engineering*, 1–13. https://doi.org/10.1080/13467581.2024.2370408",
+    ("howell", "2013"): "Howell, A. J., & Passmore, H.-A. (2013). The nature of happiness: Nature affiliation and mental well-being. In C. L. M. Keyes (Ed.), *Mental Well-Being* (pp. 231–257). Springer. https://doi.org/10.1007/978-94-007-5195-8_11",
+    ("kim", "2021"): "Kim, S., Park, H., & Choo, S. (2021). Effects of changes to architectural elements on human relaxation-arousal responses: Based on VR and EEG. *International Journal of Environmental Research and Public Health, 18*(8), 4305. https://doi.org/10.3390/ijerph18084305",
+    ("ko", "2022"): "Ko, W. H., Kent, M. G., Schiavon, S., Levitt, B., & Betti, G. (2022). A window view quality assessment framework. *LEUKOS, 18*(3), 268–293. https://doi.org/10.1080/15502724.2021.1965889",
+    ("smektala", "2022"): "Smektała, M., & Baborska-Narożny, M. (2022). The use of apartment balconies: Context, design and social norms. *Buildings and Cities, 3*(1), 134–152. https://doi.org/10.5334/bc.193",
+    ("song", "2024"): "Song, T., Xu, L., Zhao, F., & Du, Y. (2024). Healing properties of residential balcony: Characteristics of balcony space in Shanghai’s collective housing. *Journal of Building Engineering, 87*, 108992. https://doi.org/10.1016/j.jobe.2024.108992",
+    ("yeom", "2020"): "Yeom, S., Kim, H., Hong, T., Park, H. S., & Lee, D.-E. (2020). An integrated psychological score for occupants according to the windows’ outdoor view size. *Building and Environment, 180*, 107019. https://doi.org/10.1016/j.buildenv.2020.107019",
+
+    
+    ("wolkoff", "2018"): "Wolkoff, P. (2018). Indoor air humidity, air quality, and health—An overview. *International Journal of Hygiene and Environmental Health, 221*(3), 376–390. https://doi.org/10.1016/j.ijheh.2018.01.015",
+    ("tsai", "2012"): "Tsai, D. H., Lin, J. S., & Chan, C. C. (2012). Office workers’ sick building syndrome and indoor carbon dioxide concentrations. *Journal of Occupational and Environmental Hygiene, 9*(5), 345–351. https://doi.org/10.1080/15459624.2012.673454",
+}
+
 
 # %%
 thermal_reference = f"""

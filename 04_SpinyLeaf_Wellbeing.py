@@ -1,5 +1,5 @@
 
-import os, sys, json, subprocess
+import os, sys, json, subprocess, platform
 from pathlib import Path
 
 import streamlit as st
@@ -97,22 +97,63 @@ model_path = main_f / 'Rhino_Model' / 'shared_model.3dm'
 generate_report = st.sidebar.toggle("Generate Wellbeing Report", value=False)
 st.sidebar.write("Yes" if generate_report else "No")
 
-if "openai_key" not in st.session_state:
-    st.session_state.openai_key = ""
+if generate_report:
 
-st.sidebar.header("🔑 OpenAI API Key ")
-input_key = st.sidebar.text_input(
-    label="Enter your OpenAI API key",
-    type="password",
-    placeholder="sk-...",
-    key="api_key_input"
-)
-if st.sidebar.button("Save Key"):
-    if input_key.startswith("sk-"):
-        st.session_state.openai_key = input_key
-        st.sidebar.success("API key saved securely.")
-    else:
-        st.sidebar.error("Invalid API key format.")
+    model_option = st.sidebar.radio(
+    "Please, select",
+    ["OpenAI Key", "Local Llm model"])
+
+    if model_option == "OpenAI Key":
+
+        if "openai_key" not in st.session_state:
+            st.session_state.openai_key = ""
+
+        st.sidebar.header("🔑 OpenAI API Key ")
+        input_key = st.sidebar.text_input(
+            label="Enter your OpenAI API key",
+            type="password",
+            placeholder="sk-...",
+            key="api_key_input"
+        )
+        if st.sidebar.button("Save Key"):
+            if input_key.startswith("sk-"):
+                st.session_state.openai_key = input_key
+                st.sidebar.success("API key saved securely.")
+            else:
+                st.sidebar.error("Invalid API key format.")
+
+
+    elif model_option == "Local Llm model":
+
+        st.sidebar.caption("Local models must be GGUF (llama.cpp compatible).")
+
+        # Default folder inside SpinyLeaf_App
+        default_llm_dir = (main_f / "LLMs")
+        default_llm_dir.mkdir(exist_ok=True)
+
+        st.sidebar.write("Save your Llm models (.gguf) in the default folder:")
+
+        if st.sidebar.button("Open default LlM folder"):
+            subprocess.Popen(["explorer", str(default_llm_dir)], shell=True)
+
+        # Read models from default folder
+        existing_llms = sorted([p.name for p in default_llm_dir.glob("*.gguf")])
+
+        if not existing_llms:
+            st.sidebar.warning("No .gguf files found in this folder.")
+
+        selected_llm = st.sidebar.selectbox(
+            "Select LLM model:",
+            existing_llms if existing_llms else ["(No GGUF models found)"]
+        )
+
+        if existing_llms and selected_llm != "(No GGUF models found)":
+            llm_path = default_llm_dir / selected_llm
+            st.session_state["llm_path"] = str(llm_path)
+            st.sidebar.success("✅ Local LLM selected")
+        else:
+            st.session_state["llm_path"] = None
+
 
 
 window = 'U 0.67 SHGC 0.77 Sgl LoE (e2-.2) Clr 3mm'
@@ -138,7 +179,7 @@ with st.form("Get/Update Model"):
         if not model_path.exists():
             st.error("Model not found. Please click the Rhino button to export the 3DM first.")
         else:
-            with st.spinner("Building Honeybee models from Rhino geometry... this can take a moment"):
+            with st.spinner("Building models from Rhino geometry... this can take a moment"):
                 
                 payload = {
                     "src_3dm": str(model_path),
@@ -350,16 +391,26 @@ if st.session_state.model_done:
                         if generate_report:
                             with st.spinner("Generating Report..."):
                                 try:
-                                    if input_key:
+                                    if model_option == "OpenAI Key":
                                         result = subprocess.run(
                                             [sys.executable, "C:/SpinyLeaf/Functions/App_create_report_OpenAI.py", input_key],
                                             check=True, capture_output=True, text=True
                                         )
-                                    else:
+                                    elif model_option == "Local Llm model":
+                                        if llm_path is None or not Path(llm_path).exists():
+                                            raise RuntimeError("No valid local LLM path selected.")
+                                        
                                         result = subprocess.run(
-                                            [sys.executable, "C:/SpinyLeaf/Functions/App_create_report_Llama.py"],
-                                            check=True, capture_output=True, text=True
+                                            [
+                                                sys.executable,
+                                                "C:/Users/jucro/Desktop/SpinyLeaf/Functions/App_create_report_Llama.py",
+                                                "--model-path", str(llm_path),
+                                            ],
+                                            check=True,
+                                            capture_output=True,
+                                            text=True,
                                         )
+
                                     st.success("📄 Report generated successfully!")
                                     st.code(result.stdout)
                                 except subprocess.CalledProcessError as e:
