@@ -403,7 +403,7 @@ if st.session_state.model_done:
                                         result = subprocess.run(
                                             [
                                                 sys.executable,
-                                                "C:/Users/jucro/Desktop/SpinyLeaf/Functions/App_create_report_Llama.py",
+                                                "C:/SpinyLeaf/Functions/App_create_report_Llama.py",
                                                 "--model-path", str(llm_path),
                                             ],
                                             check=True,
